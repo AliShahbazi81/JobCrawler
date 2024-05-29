@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobCrawler", "JobCrawler\JobCrawler.csproj", "{E1B20842-B478-402E-8BD1-2F914175058B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{E5CF3424-6FAD-48EE-8C0F-A69E9C873474}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{0480910D-06A2-4A79-8A0A-F1A5F4C3072C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Domain", "Domain", "{BC45A7E5-2BD4-4A1A-8F54-A96C186610C6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Data", "Data", "{9753979D-D940-4A02-81DB-7BC061087FE9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{D9028CE6-E10D-4A20-9252-77CF01CAF25F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobCrawler.Services.TelegramAPI", "JobCrawler.Services.TelegramAPI\JobCrawler.Services.TelegramAPI.csproj", "{5226ACF8-AE67-49E5-B318-C39D6184BB06}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobCrawler.Domain", "JobCrawler.Domain\JobCrawler.Domain.csproj", "{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E1B20842-B478-402E-8BD1-2F914175058B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1B20842-B478-402E-8BD1-2F914175058B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1B20842-B478-402E-8BD1-2F914175058B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1B20842-B478-402E-8BD1-2F914175058B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5226ACF8-AE67-49E5-B318-C39D6184BB06}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5226ACF8-AE67-49E5-B318-C39D6184BB06}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5226ACF8-AE67-49E5-B318-C39D6184BB06}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5226ACF8-AE67-49E5-B318-C39D6184BB06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E1B20842-B478-402E-8BD1-2F914175058B} = {D9028CE6-E10D-4A20-9252-77CF01CAF25F}
+		{5226ACF8-AE67-49E5-B318-C39D6184BB06} = {E5CF3424-6FAD-48EE-8C0F-A69E9C873474}
+		{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732} = {BC45A7E5-2BD4-4A1A-8F54-A96C186610C6}
+	EndGlobalSection
+EndGlobal
