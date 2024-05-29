@@ -1,3 +1,4 @@
+using JobCrawler.Services.Crawler.DTO;
 using JobCrawler.Services.Crawler.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,12 +17,12 @@ public class LinkedInController : BaseApiController
         _logger = logger;
     }
     
-    [HttpGet]
-    public async Task<ActionResult> GetJobsAsync(string keyword, string location)
+    [HttpGet("GetJobs")]
+    public async Task<ActionResult<List<JobDto>>> GetJobs([FromQuery] List<string> keywords, string location)
     {
         try
         {
-            var result = await _crawlerService.GetJobsAsync(keyword, location);
+            var result = await _crawlerService.GetJobsAsync(keywords, location);
             return Ok(result);
         }
         catch (Exception e)

@@ -4,5 +4,5 @@ namespace JobCrawler.Services.Crawler.Services.Interfaces;
 
 public interface ICrawlerService
 {
-    Task<List<JobDto>> GetJobsAsync(string keyword, string location);
+    Task<List<JobDto>> GetJobsAsync(IEnumerable<string> keywords, string location);
 }

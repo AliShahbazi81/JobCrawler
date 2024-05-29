@@ -6,4 +6,5 @@ public record JobDto
     public string? Company { get; set; }
     public string? Location { get; set; }
     public string? Url { get; set; }
+    public string? PostedDate { get; set; }
 }
