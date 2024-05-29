@@ -11,7 +11,6 @@ public class TelegramService : ITelegramService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly string _softwareDevelopmentChannelId;
-    
 
     public TelegramService(
         ITelegramBotClient botClient, 

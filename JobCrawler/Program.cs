@@ -4,12 +4,12 @@ using JobScrawler.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOtherServices(builder.Configuration);
+builder.Services.AddAuthenticationService(builder.Environment);
 
 builder.Services.AddControllers();
 
 var app = builder.Build();
 
-//! Seeding Database
 using var scope = app.Services.CreateScope();
 
 
@@ -20,7 +20,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
     app.UseHsts();
 
