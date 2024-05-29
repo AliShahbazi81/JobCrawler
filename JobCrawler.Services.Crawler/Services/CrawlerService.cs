@@ -16,11 +16,11 @@ public class CrawlerService : ICrawlerService
         _logger = logger;
     }
 
-    public async Task<List<JobDto>> GetJobsAsync(IEnumerable<string> keywords, string location)
+    public async Task<List<JobDto>> GetJobsAsync()
     {
         var jobs = new List<JobDto>();
-        var keywordString = string.Join("+OR+", keywords);
-        var url = $"https://www.linkedin.com/jobs/search/?f_TPR=r1440&keywords={keywordString}&location={location}";
+
+        const string url = "https://www.linkedin.com/jobs/search/?f_TPR=r1440&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET)&location=Canada";
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36");
@@ -30,10 +30,10 @@ public class CrawlerService : ICrawlerService
 
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(pageContents);
-        
+
         var jobCards = htmlDocument.DocumentNode.SelectNodes("//div[contains(@class, 'base-card') and contains(@class, 'job-search-card')]");
 
-        if (jobCards == null) 
+        if (jobCards == null)
             return jobs;
 
         foreach (var card in jobCards)
@@ -50,16 +50,46 @@ public class CrawlerService : ICrawlerService
             var jobUrl = jobUrlNode?.Attributes["href"]?.Value ?? "N/A";
             var postedDate = postedDateNode?.InnerText.Trim() ?? "N/A";
 
-            jobs.Add(new JobDto
+            var job = new JobDto()
             {
                 Title = jobTitle,
                 Company = companyName,
                 Location = jobLocation,
                 Url = jobUrl,
                 PostedDate = postedDate
-            });
-        }
+            };
 
+            // Fetch additional details from job details page
+            var jobDetailsRequest = new HttpRequestMessage(HttpMethod.Get, job.Url);
+            jobDetailsRequest.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36");
+
+            var jobDetailsResponse = await _httpClient.SendAsync(jobDetailsRequest);
+            var jobDetailsPageContents = await jobDetailsResponse.Content.ReadAsStringAsync();
+
+            var jobDetailsDocument = new HtmlDocument();
+            jobDetailsDocument.LoadHtml(jobDetailsPageContents);
+
+            // Extract employment type
+            var employmentTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode("//span[contains(@class, 'job-criteria__text') and (text()='Full-time' or text()='Part-time')]");
+            job.EmploymentType = employmentTypeNode?.InnerText.Trim() ?? "N/A";
+
+            // Extract location type
+            var locationTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode("//span[contains(@class, 'job-criteria__text') and (text()='Remote' or text()='On-site' or text()='Hybrid')]");
+            job.LocationType = locationTypeNode?.InnerText.Trim() ?? "N/A";
+
+            // Extract number of employees
+            var numberOfEmployeesNode = jobDetailsDocument.DocumentNode.SelectSingleNode("//span[contains(@class, 'num-applicants__caption')]");
+            job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "N/A";
+
+            // Extract job description
+            var jobDescriptionNode = jobDetailsDocument.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__text')]");
+            job.JobDescription = jobDescriptionNode?.InnerText.Trim() ?? "N/A";
+
+            jobs.Add(job);
+        }
+        
         return jobs;
     }
 }
+
+

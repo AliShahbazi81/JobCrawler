@@ -18,11 +18,11 @@ public class LinkedInController : BaseApiController
     }
     
     [HttpGet("GetJobs")]
-    public async Task<ActionResult<List<JobDto>>> GetJobs([FromQuery] List<string> keywords, string location)
+    public async Task<ActionResult<List<JobDto>>> GetJobs()
     {
         try
         {
-            var result = await _crawlerService.GetJobsAsync(keywords, location);
+            var result = await _crawlerService.GetJobsAsync();
             return Ok(result);
         }
         catch (Exception e)
