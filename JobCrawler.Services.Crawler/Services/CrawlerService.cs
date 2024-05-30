@@ -1,7 +1,6 @@
 using HtmlAgilityPack;
 using JobCrawler.Services.Crawler.DTO;
 using JobCrawler.Services.Crawler.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 using PuppeteerSharp.BrowserData;
 
@@ -10,7 +9,6 @@ namespace JobCrawler.Services.Crawler.Services;
 public class CrawlerService : ICrawlerService
 {
     private readonly HttpClient _httpClient;
-    private readonly ILogger<CrawlerService> _logger;
     private readonly string[] _softwareKeywords = [".NET", "Java", "HTML", "C#", "AWS", "Azure", "Python", "Django", "Flask", "FastAPI", "C++",
         "C", "Perl", "GoLang", "CSS", "JavaScript", "React", "NextJs", "ExpressJs" , "ASP.NET", "React", "NodeJs", "Angular", "VueJs", "TypeScript",
         "SQL", "NoSQL", "MongoDB", "PostgreSQL", "MySQL", "SQLite", "Docker", "Kubernetes", "Jenkins", "Git", "GitHub", "GitLab", "Bitbucket",
@@ -26,10 +24,9 @@ public class CrawlerService : ICrawlerService
         "SAML9", "OpenID9", "LDAP9", "Active Directory9", "OAuth10", "OIDC10", "SAML10", "OpenID10", "LDAP10", "Active Directory10", "OAuth11",
         "OIDC11", "SAML11", "OpenID11", "LDAP11", "Active Directory11", "OAuth12", "OIDC12", "SAML12", "OpenID12", "LDAP12", "Active Directory"];
 
-    public CrawlerService(HttpClient httpClient, ILogger<CrawlerService> logger)
+    public CrawlerService(HttpClient httpClient)
     {
         _httpClient = httpClient;
-        _logger = logger;
     }
 
     public async Task<List<JobDto>> GetJobsAsync()
@@ -72,7 +69,7 @@ public class CrawlerService : ICrawlerService
             var jobUrl = jobUrlNode?.Attributes["href"]?.Value ?? "N/A";
             var postedDate = postedDateNode?.InnerText.Trim() ?? "N/A";
 
-            var job = new JobDto()
+            var job = new JobDto
             {
                 Title = jobTitle,
                 Company = companyName,
@@ -104,11 +101,11 @@ public class CrawlerService : ICrawlerService
             job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "N/A";
 
             // Extract job description
-            using (var page = await browser.NewPageAsync())
+            await using (var page = await browser.NewPageAsync())
             {
                 var jobDescriptionFound = false;
                 var attempts = 0;
-                while (attempts < 3 && !jobDescriptionFound)
+                while (attempts < 5 && !jobDescriptionFound)
                 {
                     try
                     {
@@ -138,7 +135,7 @@ public class CrawlerService : ICrawlerService
                         attempts++;
                         Console.WriteLine($"Attempt {attempts}: Failed to get job description for URL: {job.Url}");
                         Console.WriteLine(ex.Message);
-                        if (attempts >= 3)
+                        if (attempts >= 5)
                         {
                             job.JobDescription = "N/A";
                         }

@@ -3,7 +3,6 @@ using JobCrawler.Services.Crawler.Services.Interfaces;
 using JobCrawler.Services.TelegramAPI.Config;
 using JobCrawler.Services.TelegramAPI.Services;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
-using Microsoft.Extensions.Options;
 
 namespace JobScrawler.Extensions;
 
@@ -16,9 +15,9 @@ public static class OtherServicesExtensions
         //! Services
         services.AddScoped<ICrawlerService, CrawlerService>();
         
-        /*var telegramConfig = config.GetSection("Telegram");
+        var telegramConfig = config.GetSection("Telegram");
         services.Configure<TelegramConfigs>(telegramConfig);
-        services.AddScoped<ITelegramService, TelegramService>();*/
+        services.AddScoped<ITelegramService, TelegramService>();
         
         return services;
     }

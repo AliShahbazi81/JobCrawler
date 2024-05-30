@@ -10,13 +10,14 @@ namespace JobCrawler.Services.TelegramAPI.Services;
 public class TelegramService : ITelegramService
 {
     private readonly ITelegramBotClient _botClient;
+    private readonly string _botUsername;
     private readonly string _softwareDevelopmentChannelId;
 
     public TelegramService(
-        ITelegramBotClient botClient, 
         IOptions<TelegramConfigs> options)
     {
-        _botClient = botClient;
+        _botClient = new TelegramBotClient(options.Value.ApiToken);
+        _botUsername = options.Value.Username;
         _softwareDevelopmentChannelId = options.Value.SoftwareDevelopmentChannelId;
     }
 
