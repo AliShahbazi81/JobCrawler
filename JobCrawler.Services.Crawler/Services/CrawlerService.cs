@@ -2,6 +2,8 @@ using HtmlAgilityPack;
 using JobCrawler.Services.Crawler.DTO;
 using JobCrawler.Services.Crawler.Services.Interfaces;
 using Microsoft.Extensions.Logging;
+using PuppeteerSharp;
+using PuppeteerSharp.BrowserData;
 
 namespace JobCrawler.Services.Crawler.Services;
 
@@ -20,7 +22,7 @@ public class CrawlerService : ICrawlerService
     {
         var jobs = new List<JobDto>();
 
-        const string url = "https://www.linkedin.com/jobs/search/?f_TPR=r1440&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET)&location=Canada";
+        const string url = "https://www.linkedin.com/jobs/search/?f_TPR=r900&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET)&location=Canada";
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36");
@@ -35,6 +37,12 @@ public class CrawlerService : ICrawlerService
 
         if (jobCards == null)
             return jobs;
+        
+        await new BrowserFetcher().DownloadAsync(Chrome.DefaultBuildId);
+        var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+        {
+            Headless = true
+        });
 
         foreach (var card in jobCards)
         {
@@ -82,12 +90,43 @@ public class CrawlerService : ICrawlerService
             job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "N/A";
 
             // Extract job description
-            var jobDescriptionNode = jobDetailsDocument.DocumentNode.SelectSingleNode("//div[contains(@class, 'description__text')]");
-            job.JobDescription = jobDescriptionNode?.InnerText.Trim() ?? "N/A";
+            await using (var page = await browser.NewPageAsync())
+            {
+                var jobDescriptionFound = false;
+                var attempts = 0;
+                while (attempts < 3 && !jobDescriptionFound)
+                {
+                    try
+                    {
+                        await page.GoToAsync(job.Url);
+
+                        // Increase timeout to 60 seconds
+                        await page.WaitForSelectorAsync(".description__text--rich", new WaitForSelectorOptions { Timeout = 3000, Visible = true });
+
+                        var jobDescription = await page.EvaluateExpressionAsync<string>(@"
+                        document.querySelector('.description__text--rich .show-more-less-html__markup').innerText
+                    ");
+
+                        job.JobDescription = jobDescription.Trim();
+                        jobDescriptionFound = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        attempts++;
+                        Console.WriteLine($"Attempt {attempts}: Failed to get job description for URL: {job.Url}");
+                        Console.WriteLine(ex.Message);
+                        if (attempts >= 3)
+                        {
+                            job.JobDescription = "N/A";
+                        }
+                    }
+                }
+            }
 
             jobs.Add(job);
         }
         
+        await browser.CloseAsync();
         return jobs;
     }
 }
