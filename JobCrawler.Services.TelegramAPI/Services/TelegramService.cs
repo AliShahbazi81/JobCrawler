@@ -31,11 +31,12 @@ public class TelegramService : ITelegramService
                 InlineKeyboardButton.WithUrl("View Job", job.Url)
             });
 
-            await _botClient.SendTextMessageAsync(
+             await _botClient.SendTextMessageAsync(
                 chatId: _softwareDevelopmentChannelId,
                 text: message,
                 replyMarkup: inlineKeyboard,
-                parseMode: ParseMode.Html
+                parseMode: ParseMode.Html,
+                protectContent: true
             );
         }
     }

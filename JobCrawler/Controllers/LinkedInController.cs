@@ -1,20 +1,20 @@
+using JobCrawler.Infrastructure.Crawler.Services.Interfaces;
 using JobCrawler.Services.Crawler.DTO;
-using JobCrawler.Services.Crawler.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobScrawler.Controllers;
 
 public class LinkedInController : BaseApiController
 {
-    private readonly ICrawlerService _crawlerService;
+    private readonly ICrawlerManager _crawlerManager;
     private readonly ILogger<LinkedInController> _logger;
 
     public LinkedInController(
-        ICrawlerService crawlerService, 
-        ILogger<LinkedInController> logger)
+        ILogger<LinkedInController> logger, 
+        ICrawlerManager crawlerManager)
     {
-        _crawlerService = crawlerService;
         _logger = logger;
+        _crawlerManager = crawlerManager;
     }
     
     [HttpGet("GetJobs")]
@@ -22,8 +22,7 @@ public class LinkedInController : BaseApiController
     {
         try
         {
-            var result = await _crawlerService.GetJobsAsync();
-            return Ok(result);
+            return HandleResult(await _crawlerManager.CrawlAndSendJobPostsAsync());
         }
         catch (Exception e)
         {

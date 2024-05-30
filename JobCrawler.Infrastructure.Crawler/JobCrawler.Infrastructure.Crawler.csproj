@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\JobCrawler.Domain\JobCrawler.Domain.csproj" />
       <ProjectReference Include="..\JobCrawler.Services.Crawler\JobCrawler.Services.Crawler.csproj" />
       <ProjectReference Include="..\JobCrawler.Services.TelegramAPI\JobCrawler.Services.TelegramAPI.csproj" />
     </ItemGroup>
