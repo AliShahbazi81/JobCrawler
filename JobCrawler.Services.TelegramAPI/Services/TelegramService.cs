@@ -1,5 +1,7 @@
+using JobCrawler.Services.Crawler.DTO;
 using JobCrawler.Services.TelegramAPI.Config;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
+using JobCrawler.Services.TelegramAPI.Templates;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -10,25 +12,32 @@ namespace JobCrawler.Services.TelegramAPI.Services;
 public class TelegramService : ITelegramService
 {
     private readonly ITelegramBotClient _botClient;
-    private readonly string _botUsername;
     private readonly string _softwareDevelopmentChannelId;
 
     public TelegramService(
         IOptions<TelegramConfigs> options)
     {
         _botClient = new TelegramBotClient(options.Value.ApiToken);
-        _botUsername = options.Value.Username;
         _softwareDevelopmentChannelId = options.Value.SoftwareDevelopmentChannelId;
     }
 
-    public async Task<int> SendAsync(string message)
+    public async Task SendJobPostsAsync(List<JobDto> jobs)
     {
-        var messageResponse = await _botClient.SendTextMessageAsync(
-            _softwareDevelopmentChannelId,
-            message,
-            parseMode: ParseMode.Markdown);
+        foreach (var job in jobs)
+        {
+            var message = JobBoardingTemplate.CreateJobMessage(job);
+            var inlineKeyboard = new InlineKeyboardMarkup(new[]
+            {
+                InlineKeyboardButton.WithUrl("View Job", job.Url)
+            });
 
-        return messageResponse.MessageId;
+            await _botClient.SendTextMessageAsync(
+                chatId: _softwareDevelopmentChannelId,
+                text: message,
+                replyMarkup: inlineKeyboard,
+                parseMode: ParseMode.Html
+            );
+        }
     }
 
     public async Task<bool> UpdateMessageAsync(int messageId, string message)

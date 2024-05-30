@@ -1,3 +1,5 @@
+using JobCrawler.Infrastructure.Crawler.Services;
+using JobCrawler.Infrastructure.Crawler.Services.Interfaces;
 using JobCrawler.Services.Crawler.Services;
 using JobCrawler.Services.Crawler.Services.Interfaces;
 using JobCrawler.Services.TelegramAPI.Config;
@@ -18,6 +20,9 @@ public static class OtherServicesExtensions
         var telegramConfig = config.GetSection("Telegram");
         services.Configure<TelegramConfigs>(telegramConfig);
         services.AddScoped<ITelegramService, TelegramService>();
+        
+        //! Managers
+        services.AddScoped<ICrawlerManager, CrawlerManager>();
         
         return services;
     }
