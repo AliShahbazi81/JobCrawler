@@ -30,10 +30,11 @@ namespace JobCrawler.Services.TelegramAPI.Templates
             var categorizedSkills = CategorizeSkills(job.JobDescription);
 
             return $"🧾 <b>Title: {job.Title}</b>\n\n" +
+                   $"💻 <b>{job.LocationType}</b> \n" +
                    $"🏢 <b>Company:</b> {job.Company}\n" +
                    $"📍 <b>Location:</b> {job.Location}\n\n" +
-                   $"⏰ <b>Posted Date:</b> {job.PostedDate}\n" +
-                   $"🙋 <b>Number of Applicants:</b> {job.NumberOfEmployees}\n\n" +
+                   $"⏰ <b>Posted </b> {job.PostedDate}\n" +
+                   $"🙋 <b>Applicants:</b> {job.NumberOfEmployees}\n\n" +
                    $"⭐️ <b>Requirements:</b>\n{categorizedSkills}\n";
         }
 

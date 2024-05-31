@@ -97,10 +97,6 @@ public class CrawlerService : ICrawlerService
             var employmentTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.EmploymentTypeNode);
             job.EmploymentType = employmentTypeNode?.InnerText.Trim() ?? "N/A";
 
-            // Extract location type
-            var locationTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.LocationTypeNode);
-            job.LocationType = locationTypeNode?.InnerText.Trim() ?? "N/A";
-
             // Extract number of employees
             var numberOfEmployeesNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.NumberOfEmployeesNode);
             job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "0 Applicants";
@@ -125,6 +121,14 @@ public class CrawlerService : ICrawlerService
 
                         // Convert job description to lowercase
                         jobDescription = jobDescription.ToLower();
+                        
+                        // Check for location type keywords
+                        if (jobDescription.Contains("remote"))
+                            job.LocationType = "Remote";
+                        else if (jobDescription.Contains("hybrid"))
+                            job.LocationType = "Hybrid";
+                        else
+                            job.LocationType = "On-Site";
 
                         // List to store found keywords
                         var foundKeywords = _softwareKeywords
