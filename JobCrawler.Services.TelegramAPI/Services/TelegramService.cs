@@ -4,6 +4,7 @@ using JobCrawler.Services.TelegramAPI.Services.Interfaces;
 using JobCrawler.Services.TelegramAPI.Templates;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
 
@@ -21,24 +22,43 @@ public class TelegramService : ITelegramService
         _softwareDevelopmentChannelId = options.Value.SoftwareDevelopmentChannelId;
     }
 
-    public async Task SendJobPostsAsync(List<JobDto> jobs)
+    public async Task SendJobPostsAsync(JobDto job)
     {
-        foreach (var job in jobs)
-        {
             var message = JobBoardingTemplate.CreateJobMessage(job);
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 InlineKeyboardButton.WithUrl("View Job", job.Url)
             });
 
-             await _botClient.SendTextMessageAsync(
-                chatId: _softwareDevelopmentChannelId,
-                text: message,
-                replyMarkup: inlineKeyboard,
-                parseMode: ParseMode.Html,
-                protectContent: true
-            );
-        }
+            var success = false;
+            var retryCount = 0;
+            const int maxRetryAttempts = 5;
+
+            while (!success && retryCount < maxRetryAttempts)
+            {
+                try
+                {
+                    await _botClient.SendTextMessageAsync(
+                        chatId: _softwareDevelopmentChannelId,
+                        text: message,
+                        replyMarkup: inlineKeyboard,
+                        parseMode: ParseMode.Html,
+                        protectContent: true
+                    );
+                    success = true;
+                }
+                catch (ApiRequestException ex) when (ex.Message.Contains("Too Many Requests"))
+                {
+                    retryCount++;
+                    var retryAfter = ex.Parameters?.RetryAfter ?? 30; // Default to 30 seconds if RetryAfter is not specified
+                    await Task.Delay(retryAfter * 1000);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                    break; // Break out of the loop on non-rate-limit errors
+                }
+            }
     }
 
     public async Task<bool> UpdateMessageAsync(int messageId, string message)

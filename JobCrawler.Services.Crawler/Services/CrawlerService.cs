@@ -31,9 +31,10 @@ public class CrawlerService : ICrawlerService
 
     public async Task<List<JobDto>> GetJobsAsync()
     {
+        var delay = 3000;
         var jobs = new List<JobDto>();
 
-        const string url = "https://www.linkedin.com/jobs/search/?f_TPR=r900&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET OR VueJs OR Angular OR NodeJs OR SQL OR NoSQL OR ExpressJs)&location=Canada";
+        const string url = "https://www.linkedin.com/jobs/search/?f_TPR=r1800&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET OR VueJs OR Angular OR NodeJs OR SQL OR NoSQL OR ExpressJs)&location=Canada";
 
         var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36");
@@ -98,7 +99,7 @@ public class CrawlerService : ICrawlerService
 
             // Extract number of employees
             var numberOfEmployeesNode = jobDetailsDocument.DocumentNode.SelectSingleNode("//span[contains(@class, 'num-applicants__caption')]");
-            job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "N/A";
+            job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "0 Applicants";
 
             // Extract job description
             await using (var page = await browser.NewPageAsync())
@@ -112,7 +113,7 @@ public class CrawlerService : ICrawlerService
                         await page.GoToAsync(job.Url);
 
                         // Increase timeout to 60 seconds
-                        await page.WaitForSelectorAsync(".description__text--rich", new WaitForSelectorOptions { Timeout = 3000, Visible = true });
+                        await page.WaitForSelectorAsync(".description__text--rich", new WaitForSelectorOptions { Timeout = delay, Visible = true });
 
                         var jobDescription = await page.EvaluateExpressionAsync<string>(@"
                         document.querySelector('.description__text--rich .show-more-less-html__markup').innerText
@@ -133,6 +134,8 @@ public class CrawlerService : ICrawlerService
                     catch (Exception ex)
                     {
                         attempts++;
+                        if(delay < 10_000)
+                            delay += 2000;
                         Console.WriteLine($"Attempt {attempts}: Failed to get job description for URL: {job.Url}");
                         Console.WriteLine(ex.Message);
                         if (attempts >= 5)

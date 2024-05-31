@@ -12,4 +12,10 @@
       <ProjectReference Include="..\JobCrawler.Services.TelegramAPI\JobCrawler.Services.TelegramAPI.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.Hosting.Abstractions">
+        <HintPath>..\..\..\.dotnet\shared\Microsoft.AspNetCore.App\8.0.5\Microsoft.Extensions.Hosting.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
 </Project>

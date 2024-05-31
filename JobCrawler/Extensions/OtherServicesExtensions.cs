@@ -22,7 +22,7 @@ public static class OtherServicesExtensions
         services.AddScoped<ITelegramService, TelegramService>();
         
         //! Managers
-        services.AddScoped<ICrawlerManager, CrawlerManager>();
+        services.AddSingleton<IHostedService, CrawlerManager>();
         
         return services;
     }
