@@ -50,13 +50,13 @@ public class TelegramService : ITelegramService
                 catch (ApiRequestException ex) when (ex.Message.Contains("Too Many Requests"))
                 {
                     retryCount++;
-                    var retryAfter = ex.Parameters?.RetryAfter ?? 30; // Default to 30 seconds if RetryAfter is not specified
+                    var retryAfter = ex.Parameters?.RetryAfter ?? 5; 
                     await Task.Delay(retryAfter * 1000);
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"An error occurred: {ex.Message}");
-                    break; // Break out of the loop on non-rate-limit errors
+                    break; 
                 }
             }
     }

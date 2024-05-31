@@ -1,4 +1,5 @@
 using JobCrawler.Domain.Results;
+using JobCrawler.Domain.Variables;
 using JobCrawler.Infrastructure.Crawler.Services.Interfaces;
 using JobCrawler.Services.Crawler.Services.Interfaces;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
@@ -25,7 +26,7 @@ namespace JobCrawler.Infrastructure.Crawler.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Job Crawler Hosted Service running.");
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(31));
+            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(SharedVariables.TimeIntervalSeconds + 60));
             return Task.CompletedTask;
         }
         
