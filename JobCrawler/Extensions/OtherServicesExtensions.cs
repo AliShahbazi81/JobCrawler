@@ -4,7 +4,9 @@ using JobCrawler.Services.Crawler.Services;
 using JobCrawler.Services.Crawler.Services.Interfaces;
 using JobCrawler.Services.TelegramAPI.Config;
 using JobCrawler.Services.TelegramAPI.Services;
+using JobCrawler.Services.TelegramAPI.Services.Handler;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
+using Telegram.Bot;
 
 namespace JobScrawler.Extensions;
 
@@ -17,9 +19,15 @@ public static class OtherServicesExtensions
         //! Services
         services.AddScoped<ICrawlerService, CrawlerService>();
         
+        //! Telegram
+            //! Crawler
         var telegramConfig = config.GetSection("Telegram");
         services.Configure<TelegramConfigs>(telegramConfig);
         services.AddScoped<ITelegramService, TelegramService>();
+        
+            //! BOT
+            services.AddSingleton<CommandHandlerService>();
+            services.AddHostedService<BotService>();
         
         //! Managers
         services.AddSingleton<IHostedService, CrawlerManager>();
