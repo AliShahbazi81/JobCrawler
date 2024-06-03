@@ -7,7 +7,7 @@ namespace JobCrawler.Services.TelegramAPI.Templates
     {
         private static readonly string[] BackendKeywords =
         [
-            ".NET", "Java", "C#", "Python", "Django", "Flask", "FastAPI", "C++", "Laravel", "PHP", "Ruby", "Ruby on Rails", "Swift", "C", "Perl", "GoLang", "NodeJs", "ExpressJs", "ASP.NET"
+            "Dotnet", "Java", "Csharp", "Python", "Django", "Flask", "FastAPI", "C++", "Laravel", "PHP", "Ruby", "Ruby on Rails", "Swift", "C", "Perl", "GoLang", "NodeJs", "ExpressJs", "ASP.NET"
         ];
 
         private static readonly string[] FrontendKeywords =

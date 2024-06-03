@@ -13,7 +13,7 @@ public class CrawlerService : ICrawlerService
     private readonly string[] _softwareKeywords =
     [
         // Backend Development
-    ".NET", "Java", "C#", "Python", "Django", "Flask", "FastAPI", "C++", "Laravel", "PHP", "Ruby", "Ruby on Rails", "Swift", "C", "Perl", "GoLang", "NodeJs", "ExpressJs", "ASP.NET",
+    ".NET", "Java", "C#", "Python", "Django", "Flask", "FastAPI", "C++", "Laravel", "PHP", "Ruby", "Ruby on Rails", "Swift", "Perl", "GoLang", "NodeJs", "ExpressJs", "ASP.NET",
 
     // Frontend Development
     "HTML", "CSS", "JavaScript", "React", "NextJs", "Angular", "VueJs", "TypeScript",

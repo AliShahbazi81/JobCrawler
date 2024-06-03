@@ -1,3 +1,4 @@
+using JobCrawler.Domain.Helpers;
 using JobCrawler.Domain.Results;
 using JobCrawler.Domain.Variables;
 using JobCrawler.Infrastructure.Crawler.Services.Interfaces;
@@ -37,6 +38,26 @@ namespace JobCrawler.Infrastructure.Crawler.Services
             var telegramService = scope.ServiceProvider.GetRequiredService<ITelegramService>();
 
             var jobs = await crawlerService.GetJobsAsync();
+            
+            // Remove the jobs in which it does not have any job description or it is N/A
+            jobs.RemoveAll(job => string.IsNullOrEmpty(job.JobDescription) || job.JobDescription == "N/A");
+            
+            // Remove the jobs which are not posted within the last 30 minutes
+            jobs.RemoveAll(job =>
+            {
+                var seconds = TimeExtractor.GetSeconds(job.PostedDate!);
+                return seconds is null or > SharedVariables.TimeIntervalSeconds;
+            });
+            
+            // Replace .NET with DotNet and C# with CSharp in the job title
+            jobs.ForEach(job =>
+            {
+                if(job.JobDescription != null)
+                    job.JobDescription = job.JobDescription
+                        .Replace(".NET", "DotNet")
+                        .Replace("C#", "CSharp");
+            });
+            
             foreach (var job in jobs)
             {
                 await telegramService.SendJobPostsAsync(job);
