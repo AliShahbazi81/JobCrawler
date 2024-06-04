@@ -27,7 +27,7 @@
             <pre><code>git clone https://github.com/AliShahbazi81/JobCrawler.git
 cd JobCrawler</code></pre>
         </li>
-        <li>Update <code>appsettings.json</code> with your specific configurations, especially the Telegram API settings.</li>
+        <li>Create <code>appsettings.json</code> with your specific configurations, especially the Telegram API settings.</li>
         <li>Restore the necessary packages:
             <pre><code>dotnet restore</code></pre>
         </li>
@@ -43,7 +43,7 @@ cd JobCrawler</code></pre>
         <li>Monitor the console output for logs indicating successful job scraping and Telegram message dispatches.</li>
     </ol>
     <h2>Configuration</h2>
-    <p>The application settings are located in <code>appsettings.json</code>. Configure your Telegram bot settings under the <code>TelegramConfigs</code> section:</p>
+    <p>Create an <code>appsettings.json</code> file in the project's root directory with the following structure to configure your Telegram bot settings:</p>
     <pre><code>{
   "TelegramConfigs": {
     "BotToken": "YOUR_TELEGRAM_BOT_TOKEN",
