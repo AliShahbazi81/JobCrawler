@@ -24,6 +24,9 @@ public static class OtherServicesExtensions
         services.Configure<TelegramConfigs>(telegramConfig);
         services.AddScoped<ITelegramService, TelegramService>();
         
+        var stripeConfig = config.GetSection("StripeInfo");
+        services.Configure<StripeConfig>(stripeConfig);
+        
             //! BOT
             services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(token: telegramConfig["ApiToken"] ?? throw new InvalidOperationException()));
             services.AddSingleton<CommandHandlerService>();

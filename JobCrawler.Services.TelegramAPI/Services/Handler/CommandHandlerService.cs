@@ -19,7 +19,8 @@ public class CommandHandlerService
             new StartCommand(),
             new ContactUsCommand(),
             new ChannelsCommand(),
-            new GroupCommand()
+            new GroupCommand(),
+            new DonationCommand(),
         };
     }
 
