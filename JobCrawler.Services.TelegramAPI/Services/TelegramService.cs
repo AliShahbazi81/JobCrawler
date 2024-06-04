@@ -24,7 +24,7 @@ public class TelegramService : ITelegramService
 
     public async Task SendJobPostsAsync(JobDto job)
     {
-            /*var message = JobBoardingTemplate.CreateJobMessage(job);
+            var message = JobBoardingTemplate.CreateJobMessage(job);
             var inlineKeyboard = new InlineKeyboardMarkup(new[]
             {
                 InlineKeyboardButton.WithUrl("View Job", job.Url)
@@ -58,6 +58,6 @@ public class TelegramService : ITelegramService
                     Console.WriteLine($"An error occurred: {ex.Message}");
                     break; 
                 }
-            }*/
+            }
     }
 }
