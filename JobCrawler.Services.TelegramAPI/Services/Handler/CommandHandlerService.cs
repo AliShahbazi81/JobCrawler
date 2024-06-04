@@ -1,7 +1,5 @@
-using JobCrawler.Services.TelegramAPI.Config;
 using JobCrawler.Services.TelegramAPI.Services.Commands;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
-using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -13,24 +11,24 @@ public class CommandHandlerService
     private readonly ITelegramBotClient _botClient;
     private readonly List<IBotCommand> _commands;
 
-    public CommandHandlerService(IOptions<TelegramConfigs> options)
+    public CommandHandlerService(ITelegramBotClient botClient)
     {
-        _botClient = new TelegramBotClient(options.Value.ApiToken);
+        _botClient = botClient;
         _commands = new List<IBotCommand>
         {
+            new StartCommand(),
             new ContactUsCommand(),
             new ChannelsCommand(),
             new GroupCommand()
         };
     }
-    
+
     public async Task HandleUpdateAsync(Update update)
     {
-        Console.WriteLine($"Received the command {update.Message}");
         if (update.Type == UpdateType.Message && update.Message.Type == MessageType.Text)
         {
             var message = update.Message;
-            if (message.Text != null && message.Text.StartsWith("/"))
+            if (message.Text.StartsWith("/"))
             {
                 await HandleCommandAsync(message);
             }

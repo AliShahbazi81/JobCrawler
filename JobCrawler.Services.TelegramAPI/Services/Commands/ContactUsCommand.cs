@@ -8,7 +8,7 @@ namespace JobCrawler.Services.TelegramAPI.Services.Commands;
 
 public class ContactUsCommand : BotCommandBase
 {
-    public override string Command => TelegramVarInfo.ContactUsCommand;
+    public override string Command => "/contact_us";
     public override async Task ExecuteAsync(ITelegramBotClient botClient, Message message)
     {
         var inlineKeyboards = new InlineKeyboardMarkup(new[]

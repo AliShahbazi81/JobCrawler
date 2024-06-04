@@ -9,7 +9,7 @@ namespace JobCrawler.Services.TelegramAPI.Services.Commands;
 
 public class GroupCommand : BotCommandBase
 {
-    public override string Command => TelegramVarInfo.GroupCommand;
+    public override string Command => "/discussion";
     public override async Task ExecuteAsync(ITelegramBotClient botClient, Message message)
     {
         var inlineKeyboards = new InlineKeyboardMarkup(new[]

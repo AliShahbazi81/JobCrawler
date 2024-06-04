@@ -21,19 +21,21 @@ public class BotService : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _botClient.StartReceiving(
-            HandleUpdateAsync,
-            HandleErrorAsync,
+            async (_, update, _) => await HandleUpdateAsync(update),
+            async (_, exception, _) => await HandleErrorAsync(exception),
             new ReceiverOptions(),
             stoppingToken
         );
+
+        Console.WriteLine("Bot is up and running.");
     }
 
-    private Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+    private async Task HandleUpdateAsync(Update update)
     {
-        return _commandHandler.HandleUpdateAsync(update);
+        await _commandHandler.HandleUpdateAsync(update);
     }
 
-    private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
+    private Task HandleErrorAsync(Exception exception)
     {
         Console.WriteLine($"An error occurred: {exception.Message}");
         return Task.CompletedTask;

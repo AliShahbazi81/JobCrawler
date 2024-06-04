@@ -1,5 +1,4 @@
 using JobCrawler.Infrastructure.Crawler.Services;
-using JobCrawler.Infrastructure.Crawler.Services.Interfaces;
 using JobCrawler.Services.Crawler.Services;
 using JobCrawler.Services.Crawler.Services.Interfaces;
 using JobCrawler.Services.TelegramAPI.Config;
@@ -26,6 +25,7 @@ public static class OtherServicesExtensions
         services.AddScoped<ITelegramService, TelegramService>();
         
             //! BOT
+            services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(token: telegramConfig["ApiToken"] ?? throw new InvalidOperationException()));
             services.AddSingleton<CommandHandlerService>();
             services.AddHostedService<BotService>();
         

@@ -8,7 +8,7 @@ namespace JobCrawler.Services.TelegramAPI.Services.Commands;
 
 public class ChannelsCommand : BotCommandBase
 {
-    public override string Command => TelegramVarInfo.ChannelsCommand;
+    public override string Command => "/channels";
     public override async Task ExecuteAsync(ITelegramBotClient botClient, Message message)
     {
         var inlineKeyboards = new InlineKeyboardMarkup(new[]
