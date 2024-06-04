@@ -15,9 +15,8 @@ public class ContactUsCommand : BotCommandBase
         {
             new[]
             {
-                InlineKeyboardButton.WithUrl("Email", "mailto:ali@shahbazi.me"),
-                InlineKeyboardButton.WithUrl("LinkedIn", "https://www.linkedin.com/in/alishahbazi81/"),
-                InlineKeyboardButton.WithUrl("Telegram", "@AliShahbazi81"),
+                InlineKeyboardButton.WithUrl("\u2705 LinkedIn", "https://www.linkedin.com/in/alishahbazi81/"),
+                InlineKeyboardButton.WithUrl("\u2705 Telegram", "https://t.me/AliShahbazi81"),
             }
         });
         

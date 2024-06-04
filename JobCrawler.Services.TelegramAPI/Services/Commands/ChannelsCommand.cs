@@ -15,13 +15,16 @@ public class ChannelsCommand : BotCommandBase
         {
             new[]
             {
-                InlineKeyboardButton.WithUrl(TelegramVarInfo.SoftwareDevelopmentChannelName, TelegramVarInfo.SoftwareDevelopmentChannelId),
+                InlineKeyboardButton.WithUrl("\ud83d\udcbb Software Development", "https://t.me/JCrawler_Computer"),
             }
         });
         
         await botClient.SendTextMessageAsync(
             chatId: message.Chat.Id,
-            text: "Here you can find the channels which are crawling the jobs:\n\n",
+            text: "\u2705 Here you can find the channels which are crawling the jobs:\n\n" +
+                  "Be aware that each channel crawls related jobs every 30 minutes. If you cannot find your field, do not worry, we are continuously working on expanding the bot to cover almost all of the fields.\n" +
+                  "Also, you can ask us to support your field as soon as possible! For doing so, you can send us a message:\n\n" +
+                  "@AliShahbazi81",
             replyMarkup: inlineKeyboards,
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
         );

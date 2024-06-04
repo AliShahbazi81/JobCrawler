@@ -11,6 +11,5 @@ public static class TelegramVarInfo
     //! Groups
     public const string GeneralDiscussionChannelId = "@JCrawlerGroup";
     //! Channels
-    public const string SoftwareDevelopmentChannelName = "Software Development";
     public const string SoftwareDevelopmentChannelId = "@JCrawler_Computer";
 }
