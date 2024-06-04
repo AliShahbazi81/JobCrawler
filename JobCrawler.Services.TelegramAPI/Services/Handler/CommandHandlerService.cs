@@ -39,7 +39,8 @@ public class CommandHandlerService
 
     private async Task HandleCommandAsync(Message message)
     {
-        var command = _commands.FirstOrDefault(c => message.Text.StartsWith(c.Command, StringComparison.OrdinalIgnoreCase));
+        var commandText = message.Text.Trim().ToLower();
+        var command = _commands.FirstOrDefault(c => commandText.StartsWith(c.Command.ToLower()));
         if (command != null)
         {
             await command.ExecuteAsync(_botClient, message);
