@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobCrawler.Services.Crawler
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobCrawler.Infrastructure.Crawler", "JobCrawler.Infrastructure.Crawler\JobCrawler.Infrastructure.Crawler.csproj", "{228C74E6-BB73-470E-8F63-113A94CD45D2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JobCrawler.Data.Crawler", "JobCrawler.Data.Crawler\JobCrawler.Data.Crawler.csproj", "{9D1585F4-01C7-4B9F-9BA9-C49F697350A1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,10 @@ Global
 		{228C74E6-BB73-470E-8F63-113A94CD45D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{228C74E6-BB73-470E-8F63-113A94CD45D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{228C74E6-BB73-470E-8F63-113A94CD45D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D1585F4-01C7-4B9F-9BA9-C49F697350A1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D1585F4-01C7-4B9F-9BA9-C49F697350A1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D1585F4-01C7-4B9F-9BA9-C49F697350A1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D1585F4-01C7-4B9F-9BA9-C49F697350A1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E1B20842-B478-402E-8BD1-2F914175058B} = {D9028CE6-E10D-4A20-9252-77CF01CAF25F}
@@ -53,5 +59,6 @@ Global
 		{EA7B5006-FA90-48B0-BDF9-5EC19E9C6732} = {BC45A7E5-2BD4-4A1A-8F54-A96C186610C6}
 		{A3E37E25-4B34-44D4-9A09-CB8D59DECA5B} = {E5CF3424-6FAD-48EE-8C0F-A69E9C873474}
 		{228C74E6-BB73-470E-8F63-113A94CD45D2} = {0480910D-06A2-4A79-8A0A-F1A5F4C3072C}
+		{9D1585F4-01C7-4B9F-9BA9-C49F697350A1} = {9753979D-D940-4A02-81DB-7BC061087FE9}
 	EndGlobalSection
 EndGlobal
