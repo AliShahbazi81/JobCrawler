@@ -18,24 +18,25 @@ public class BotService : BackgroundService
         _botClient = new TelegramBotClient(options.Value.ApiToken);
         _commandHandler = commandHandler;
     }
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _botClient.StartReceiving(
-            async (_, update, _) => await HandleUpdateAsync(update),
-            async (_, exception, _) => await HandleErrorAsync(exception),
+            HandleUpdateAsync,
+            HandleErrorAsync,
             new ReceiverOptions(),
             stoppingToken
         );
 
         Console.WriteLine("Bot is up and running.");
+        return Task.CompletedTask;
     }
 
-    private async Task HandleUpdateAsync(Update update)
+    private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
         await _commandHandler.HandleUpdateAsync(update);
     }
 
-    private Task HandleErrorAsync(Exception exception)
+    private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         Console.WriteLine($"An error occurred: {exception.Message}");
         return Task.CompletedTask;

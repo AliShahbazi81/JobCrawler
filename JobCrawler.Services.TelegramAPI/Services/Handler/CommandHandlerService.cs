@@ -34,6 +34,14 @@ public class CommandHandlerService
                 await HandleCommandAsync(message);
             }
         }
+        else if (update.Type == UpdateType.CallbackQuery)
+        {
+            var callbackQuery = update.CallbackQuery;
+            if (callbackQuery != null)
+            {
+                await HandleCallbackQueryAsync(callbackQuery);
+            }
+        }
     }
 
     private async Task HandleCommandAsync(Message message)
@@ -50,6 +58,21 @@ public class CommandHandlerService
                 chatId: message.Chat.Id,
                 text: "Sorry, I didn't understand that command."
             );
+        }
+    }
+
+    private async Task HandleCallbackQueryAsync(CallbackQuery callbackQuery)
+    {
+        var command = callbackQuery.Data;
+        if (!string.IsNullOrEmpty(command))
+        {
+            var message = new Message
+            {
+                Chat = callbackQuery.Message.Chat,
+                MessageId = callbackQuery.Message.MessageId,
+                Text = command
+            };
+            await HandleCommandAsync(message);
         }
     }
 }

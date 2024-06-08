@@ -12,11 +12,10 @@ public class StartCommand : IBotCommand
     {
         var inlineKeyboards = new InlineKeyboardMarkup(new[]
         {
-            new[]
-            {
+            [
                 InlineKeyboardButton.WithCallbackData("\ud83d\udd0e Channels", "/channels"),
-                InlineKeyboardButton.WithCallbackData("\ud83d\udde3 Discussion", "/discussion"),
-            },
+                InlineKeyboardButton.WithCallbackData("\ud83d\udde3 Discussion", "/discussion")
+            ],
             new[]
             {
                 InlineKeyboardButton.WithCallbackData("\ud83d\udcb3 Donation", "/donation"),

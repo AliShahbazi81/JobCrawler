@@ -27,7 +27,7 @@ namespace JobCrawler.Infrastructure.Crawler.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Job Crawler Hosted Service running.");
-            _timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(SharedVariables.TimeIntervalSeconds + 60));
+            /*_timer = new Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromSeconds(SharedVariables.TimeIntervalSeconds + 60));*/
             return Task.CompletedTask;
         }
         
