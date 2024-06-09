@@ -76,92 +76,107 @@ public class CrawlerService : ICrawlerService
             await new BrowserFetcher().DownloadAsync(Chrome.DefaultBuildId);
             var browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
-                Headless = true
+                Headless = true,
+                Timeout = 60000 // Increase timeout to 60 seconds
             });
 
-            foreach (var card in jobCards)
+            try
             {
-                var jobTitleNode = card.SelectSingleNode(SharedVariables.JobTitleNode);
-                var companyNode = card.SelectSingleNode(SharedVariables.CompanyNode);
-                var locationNode = card.SelectSingleNode(SharedVariables.LocationNode);
-                var jobUrlNode = card.SelectSingleNode(SharedVariables.JobUrlNode);
-                var postedDateNode = card.SelectSingleNode(SharedVariables.PostedDateNode);
-
-                var jobTitle = jobTitleNode?.InnerText.Trim() ?? "N/A";
-                var companyName = companyNode?.InnerText.Trim() ?? "N/A";
-                var jobLocation = locationNode?.InnerText.Trim() ?? "N/A";
-                var jobUrl = jobUrlNode?.Attributes["href"]?.Value ?? "N/A";
-                var postedDate = postedDateNode?.InnerText.Trim() ?? "N/A";
-
-                var job = new JobDto
+                foreach (var card in jobCards)
                 {
-                    Title = jobTitle,
-                    Company = companyName,
-                    Location = jobLocation,
-                    Url = jobUrl,
-                    PostedDate = postedDate
-                };
+                    var jobTitleNode = card.SelectSingleNode(SharedVariables.JobTitleNode);
+                    var companyNode = card.SelectSingleNode(SharedVariables.CompanyNode);
+                    var locationNode = card.SelectSingleNode(SharedVariables.LocationNode);
+                    var jobUrlNode = card.SelectSingleNode(SharedVariables.JobUrlNode);
+                    var postedDateNode = card.SelectSingleNode(SharedVariables.PostedDateNode);
 
-                // Fetch additional details from job details page
-                using var jobDetailsRequest = new HttpRequestMessage(HttpMethod.Get, job.Url);
-                jobDetailsRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
+                    var jobTitle = jobTitleNode?.InnerText.Trim() ?? "N/A";
+                    var companyName = companyNode?.InnerText.Trim() ?? "N/A";
+                    var jobLocation = locationNode?.InnerText.Trim() ?? "N/A";
+                    var jobUrl = jobUrlNode?.Attributes["href"]?.Value ?? "N/A";
+                    var postedDate = postedDateNode?.InnerText.Trim() ?? "N/A";
 
-                var jobDetailsResponse = await _httpClient.SendAsync(jobDetailsRequest);
-                var jobDetailsPageContents = await jobDetailsResponse.Content.ReadAsStringAsync();
+                    var job = new JobDto
+                    {
+                        Title = jobTitle,
+                        Company = companyName,
+                        Location = jobLocation,
+                        Url = jobUrl,
+                        PostedDate = postedDate
+                    };
 
-                var jobDetailsDocument = new HtmlDocument();
-                jobDetailsDocument.LoadHtml(jobDetailsPageContents);
+                    // Fetch additional details from job details page
+                    using var jobDetailsRequest = new HttpRequestMessage(HttpMethod.Get, job.Url);
+                    jobDetailsRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
 
-                // Extract employment type
-                var employmentTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.EmploymentTypeNode);
-                job.EmploymentType = employmentTypeNode?.InnerText.Trim() ?? "N/A";
+                    var jobDetailsResponse = await _httpClient.SendAsync(jobDetailsRequest);
+                    var jobDetailsPageContents = await jobDetailsResponse.Content.ReadAsStringAsync();
 
-                // Extract number of employees
-                var numberOfEmployeesNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.NumberOfEmployeesNode);
-                job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "0 Applicants";
+                    var jobDetailsDocument = new HtmlDocument();
+                    jobDetailsDocument.LoadHtml(jobDetailsPageContents);
 
-                // Extract job description
-                await using (var page = await browser.NewPageAsync())
-                {
+                    // Extract employment type
+                    var employmentTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.EmploymentTypeNode);
+                    job.EmploymentType = employmentTypeNode?.InnerText.Trim() ?? "N/A";
+
+                    // Extract number of employees
+                    var numberOfEmployeesNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.NumberOfEmployeesNode);
+                    job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "0 Applicants";
+
+                    // Extract job description
                     var jobDescriptionFound = false;
                     var attempts = 0;
+
                     while (attempts < 5 && !jobDescriptionFound)
                     {
                         try
                         {
-                            await page.GoToAsync(job.Url);
+                            using (var page = await browser.NewPageAsync())
+                            {
+                                await page.GoToAsync(job.Url, new NavigationOptions
+                                {
+                                    WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+                                });
 
-                            // Increase timeout to 60 seconds
-                            await page.WaitForSelectorAsync(SharedVariables.JobDescriptionNode, new WaitForSelectorOptions { Timeout = delay, Visible = true });
+                                // Validate the page object
+                                if (page == null)
+                                {
+                                    Console.WriteLine("Page object is null.");
+                                    throw new Exception("Page object is null.");
+                                }
 
-                            var jobDescription = await page.EvaluateExpressionAsync<string>(@"
-                            document.querySelector('.description__text--rich .show-more-less-html__markup').innerText
+                                // Increase timeout to 60 seconds
+                                await page.WaitForSelectorAsync(SharedVariables.JobDescriptionNode, new WaitForSelectorOptions { Timeout = delay, Visible = true });
+
+                                var jobDescription = await page.EvaluateExpressionAsync<string>(@"
+                            document.querySelector('.description__text--rich').innerText
                         ");
 
-                            // Convert job description to lowercase
-                            jobDescription = jobDescription.ToLower();
-                            
-                            // Check for location type keywords
-                            if (jobDescription.Contains("remote"))
-                                job.LocationType = "Remote";
-                            else if (jobDescription.Contains("hybrid"))
-                                job.LocationType = "Hybrid";
-                            else
-                                job.LocationType = "On-Site";
+                                // Convert job description to lowercase
+                                jobDescription = jobDescription.ToLower();
 
-                            // List to store found keywords
-                            var foundKeywords = _softwareKeywords
-                                .Where(keyword => jobDescription.Contains(keyword.ToLower()))
-                                .ToList();
+                                // Check for location type keywords
+                                if (jobDescription.Contains("remote"))
+                                    job.LocationType = "Remote";
+                                else if (jobDescription.Contains("hybrid"))
+                                    job.LocationType = "Hybrid";
+                                else
+                                    job.LocationType = "On-Site";
 
-                            // Set job description to found keywords or N/A if none found
-                            job.JobDescription = foundKeywords.Count > 0 ? string.Join(", ", foundKeywords) : "N/A";
-                            jobDescriptionFound = true;
+                                // List to store found keywords
+                                var foundKeywords = _softwareKeywords
+                                    .Where(keyword => jobDescription.Contains(keyword.ToLower()))
+                                    .ToList();
+
+                                // Set job description to found keywords or N/A if none found
+                                job.JobDescription = foundKeywords.Count > 0 ? string.Join(", ", foundKeywords) : "N/A";
+                                jobDescriptionFound = true;
+                            }
                         }
                         catch (Exception ex)
                         {
                             attempts++;
-                            if(delay < 10_000)
+                            if (delay < 10_000)
                                 delay += 2000;
                             Console.WriteLine($"Attempt {attempts}: Failed to get job description for URL: {job.Url}");
                             Console.WriteLine(ex.Message);
@@ -171,14 +186,37 @@ public class CrawlerService : ICrawlerService
                             }
                         }
                     }
+
+                    jobs.Add(job);
                 }
-
-                jobs.Add(job);
             }
-
-            await browser.CloseAsync();
+            finally
+            {
+                await browser.CloseAsync();
+            }
         });
 
         return jobs;
+    }
+
+
+    private static List<string> GetFreeProxies()
+    {
+        return
+        [
+            "http://37.120.189.106:80",
+            "http://38.54.71.67:80",
+            "http://217.160.99.39:80",
+            "http://202.61.204.51:80",
+            "http://83.98.243.181:80",
+            "http://85.214.195.118:80",
+            "http://51.254.78.223:80",
+            "http://79.116.73.5:80",
+            "http://116.203.28.43:80",
+            "http://37.27.81.120:80",
+            "http://65.109.189.49:80",
+            "http://37.27.82.72:80",
+            "http://188.132.209.245:80"
+        ];
     }
 }

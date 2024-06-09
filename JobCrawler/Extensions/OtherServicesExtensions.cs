@@ -24,26 +24,6 @@ public static class OtherServicesExtensions
         var telegramConfig = config.GetSection("Telegram");
         services.Configure<TelegramConfigs>(telegramConfig);
         services.AddScoped<ITelegramService, TelegramService>();
-        /*var botClient = new TelegramBotClient("YOUR_API_TOKEN");
-        var handlerService = new CommandHandlerService(botClient);
-
-        botClient.StartReceiving(
-            new DefaultUpdateHandler(handlerService.HandleUpdateAsync, HandleErrorAsync)
-        );
-
-        Console.WriteLine("Bot is up and running.");
-
-        Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
-        {
-            var errorMessage = exception switch
-            {
-                Telegram.Bot.Exceptions.ApiRequestException apiRequestException => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
-                _ => exception.ToString()
-            };
-
-            Console.WriteLine(errorMessage);
-            return Task.CompletedTask;
-        }*/
         
         var stripeConfig = config.GetSection("StripeInfo");
         services.Configure<StripeConfig>(stripeConfig);
