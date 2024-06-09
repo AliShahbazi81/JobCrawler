@@ -77,7 +77,7 @@ public class CrawlerService : ICrawlerService
             var browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
                 Headless = true,
-                Timeout = 60000 // Increase timeout to 60 seconds
+                Timeout = 60000
             });
 
             try
@@ -131,47 +131,45 @@ public class CrawlerService : ICrawlerService
                     {
                         try
                         {
-                            using (var page = await browser.NewPageAsync())
+                            await using var page = await browser.NewPageAsync();
+                            await page.GoToAsync(job.Url, new NavigationOptions
                             {
-                                await page.GoToAsync(job.Url, new NavigationOptions
-                                {
-                                    WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
-                                });
+                                WaitUntil = [WaitUntilNavigation.Networkidle0]
+                            });
 
-                                // Validate the page object
-                                if (page == null)
-                                {
-                                    Console.WriteLine("Page object is null.");
-                                    throw new Exception("Page object is null.");
-                                }
+                            // Validate the page object
+                            if (page == null)
+                            {
+                                Console.WriteLine("Page object is null.");
+                                throw new Exception("Page object is null.");
+                            }
 
-                                // Increase timeout to 60 seconds
-                                await page.WaitForSelectorAsync(SharedVariables.JobDescriptionNode, new WaitForSelectorOptions { Timeout = delay, Visible = true });
+                            // Increase timeout to 60 seconds
+                            await page.WaitForSelectorAsync(SharedVariables.JobDescriptionNode, new WaitForSelectorOptions { Timeout = delay, Visible = true });
 
-                                var jobDescription = await page.EvaluateExpressionAsync<string>(@"
+                            var jobDescription = await page.EvaluateExpressionAsync<string>(@"
                             document.querySelector('.description__text--rich').innerText
                         ");
 
-                                // Convert job description to lowercase
-                                jobDescription = jobDescription.ToLower();
+                            // Convert job description to lowercase
+                            jobDescription = jobDescription.ToLower();
 
-                                // Check for location type keywords
-                                if (jobDescription.Contains("remote"))
-                                    job.LocationType = "Remote";
-                                else if (jobDescription.Contains("hybrid"))
-                                    job.LocationType = "Hybrid";
-                                else
-                                    job.LocationType = "On-Site";
+                            // Check for location type keywords
+                            if (jobDescription.Contains("remote"))
+                                job.LocationType = "Remote";
+                            else if (jobDescription.Contains("hybrid"))
+                                job.LocationType = "Hybrid";
+                            else
+                                job.LocationType = "On-Site";
 
-                                // List to store found keywords
-                                var foundKeywords = _softwareKeywords
-                                    .Where(keyword => jobDescription.Contains(keyword.ToLower()))
-                                    .ToList();
+                            // List to store found keywords
+                            var foundKeywords = _softwareKeywords
+                                .Where(keyword => jobDescription.Contains(keyword.ToLower()))
+                                .ToList();
 
-                                // Set job description to found keywords or N/A if none found
-                                job.JobDescription = foundKeywords.Count > 0 ? string.Join(", ", foundKeywords) : "N/A";
-                                jobDescriptionFound = true;
-                            }
+                            // Set job description to found keywords or N/A if none found
+                            job.JobDescription = foundKeywords.Count > 0 ? string.Join(", ", foundKeywords) : "N/A";
+                            jobDescriptionFound = true;
                         }
                         catch (Exception ex)
                         {
