@@ -1,3 +1,4 @@
+using System.Diagnostics.Metrics;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -30,5 +31,17 @@ public class StartCommand : IBotCommand
             replyMarkup: inlineKeyboards,
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
         );
+        
+        // Get clientId from Telegram message
+        var userId = message.From.Id;
+    }
+
+    private async Task RegisterUserAsync(long userId)
+    {
+        // Take userId from the message and save it to the database
+        var user = new User
+        {
+            Id = userId
+        };
     }
 }
