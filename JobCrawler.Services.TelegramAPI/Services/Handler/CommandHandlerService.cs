@@ -106,7 +106,6 @@ public class CommandHandlerService
 
     private async Task HandleKeywordsAsync(Message message)
     {
-        Console.WriteLine("HandleKeywordsAsync called with message: " + message.Text); // Debug statement
         var crawlerCommand = _commands.OfType<CrawlerCommand>().FirstOrDefault();
         if (crawlerCommand != null)
         {
