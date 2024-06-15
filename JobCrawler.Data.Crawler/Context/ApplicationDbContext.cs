@@ -7,11 +7,9 @@ public class ApplicationDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Country> Countries { get; set; }
-    public DbSet<Field> Fields { get; set; }
     public DbSet<Keyword> Keywords { get; set; }
     public DbSet<UserKeyword> UserKeywords { get; set; }
     public DbSet<UserCountry> UserCountries { get; set; }
-    public DbSet<UserField> UserFields { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
     {
@@ -22,10 +20,8 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new CountryConfiguration());
-        modelBuilder.ApplyConfiguration(new FieldConfiguration());
         modelBuilder.ApplyConfiguration(new KeywordConfiguration());
         modelBuilder.ApplyConfiguration(new UserKeywordConfiguration());
         modelBuilder.ApplyConfiguration(new UserCountryConfiguration());
-        modelBuilder.ApplyConfiguration(new UserFieldConfiguration());
     }
 }
