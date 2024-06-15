@@ -23,6 +23,7 @@ public class CommandHandlerService
             new ChannelsCommand(),
             new GroupCommand(),
             new DonationCommand(),
+            new CrawlerCommand(context)
         };
     }
 

@@ -23,6 +23,9 @@ public class StartCommand : IBotCommand
         var inlineKeyboards = new InlineKeyboardMarkup(new[]
         {
             [
+                InlineKeyboardButton.WithCallbackData("\u267b\ufe0f Crawler", "/crawler")
+            ],
+            [
                 InlineKeyboardButton.WithCallbackData("\ud83d\udd0e Channels", "/channels"),
                 InlineKeyboardButton.WithCallbackData("\ud83d\udde3 Discussion", "/discussion")
             ],
