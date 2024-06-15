@@ -9,7 +9,7 @@ public static class DatabaseExtension
     {
         services.AddPooledDbContextFactory<ApplicationDbContext>(options =>
             options.UseSqlServer(configuration.GetConnectionString("JobCrawlerDatabase")));
-            
+
         return services;
     }
 
@@ -17,10 +17,10 @@ public static class DatabaseExtension
     {
         using var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>()?.CreateScope();
         var contextFactory = serviceScope?.ServiceProvider.GetRequiredService<IDbContextFactory<ApplicationDbContext>>();
-        if (contextFactory != null)
-        {
-            using var context = contextFactory.CreateDbContext();
-            context.Database.Migrate();
-        }
+        if (contextFactory == null)
+            return;
+
+        using var context = contextFactory.CreateDbContext();
+        context.Database.Migrate();
     }
 }
