@@ -1,13 +1,22 @@
-using System.Diagnostics.Metrics;
+using JobCrawler.Data.Crawler.Context;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
+using User = JobCrawler.Data.Crawler.Entities.User;
 
 namespace JobCrawler.Services.TelegramAPI.Services.Commands;
 
 public class StartCommand : IBotCommand
 {
+    private readonly IDbContextFactory<ApplicationDbContext> _context;
+
+    public StartCommand(IDbContextFactory<ApplicationDbContext> context)
+    {
+        _context = context;
+    }
+
     public string Command => "/start";
     public async Task ExecuteAsync(ITelegramBotClient botClient, Message message)
     {
@@ -32,16 +41,26 @@ public class StartCommand : IBotCommand
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Html
         );
         
-        // Get clientId from Telegram message
-        var userId = message.From.Id;
+        await RegisterUserAsync(message.Chat.Id, message.Chat.Username);
     }
 
-    private async Task RegisterUserAsync(long userId)
+    private async Task RegisterUserAsync(long userId, string? username)
     {
-        // Take userId from the message and save it to the database
-        var user = new User
+        await using var dbContext = await _context.CreateDbContextAsync();
+        var user = await dbContext.Users
+            .SingleOrDefaultAsync(x => x.ClientId == userId);
+        
+        if(user is not null)
+            return;
+        
+        user = new User
         {
-            Id = userId
+            ClientId = userId,
+            Username = username,
+            JoinedAt = DateTime.Now.ToUniversalTime()
         };
+        
+        await dbContext.Users.AddAsync(user);
+        await dbContext.SaveChangesAsync();
     }
 }

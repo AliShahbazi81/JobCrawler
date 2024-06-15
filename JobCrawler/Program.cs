@@ -3,6 +3,7 @@ using JobScrawler.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddDatabaseConfiguration(builder.Configuration);
 builder.Services.AddOtherServices(builder.Configuration);
 builder.Services.AddAuthenticationService(builder.Environment);
 
@@ -35,5 +36,7 @@ app.MapControllerRoute(
     "{controller}/{action=Index}/{id?}");
 
 app.MapControllers();
+
+app.EnsureDatabaseMigrated();
 
 app.Run();

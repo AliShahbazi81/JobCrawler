@@ -8,7 +8,7 @@ public class UserField
     public int Id { get; set; }
     public bool IsEnabled { get; set; } = true;
     
-    public int ClientId { get; set; }
+    public long ClientId { get; set; }
     public User User { get; set; }
     public int FieldId { get; set; }
     public Field Field { get; set; }

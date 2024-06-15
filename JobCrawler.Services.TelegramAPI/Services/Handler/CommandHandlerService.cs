@@ -1,5 +1,7 @@
+using JobCrawler.Data.Crawler.Context;
 using JobCrawler.Services.TelegramAPI.Services.Commands;
 using JobCrawler.Services.TelegramAPI.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
@@ -11,12 +13,12 @@ public class CommandHandlerService
     private readonly ITelegramBotClient _botClient;
     private readonly List<IBotCommand> _commands;
 
-    public CommandHandlerService(ITelegramBotClient botClient)
+    public CommandHandlerService(ITelegramBotClient botClient, IDbContextFactory<ApplicationDbContext> context)
     {
         _botClient = botClient;
         _commands = new List<IBotCommand>
         {
-            new StartCommand(),
+            new StartCommand(context),
             new ContactUsCommand(),
             new ChannelsCommand(),
             new GroupCommand(),

@@ -7,7 +7,7 @@ public class UserCountry
 {
     public int Id { get; set; }
     
-    public int ClientId { get; set; }
+    public long ClientId { get; set; }
     public User User { get; set; }
     public int CountryId { get; set; }
     public Country Country { get; set; }
