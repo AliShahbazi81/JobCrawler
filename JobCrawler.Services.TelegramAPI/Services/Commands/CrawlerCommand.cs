@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using User = JobCrawler.Data.Crawler.Entities.User;
 
 namespace JobCrawler.Services.TelegramAPI.Services.Commands;
 
@@ -46,7 +45,7 @@ public class CrawlerCommand : IBotCommand
                   "\u2705 Separate the words using ','. e.g: C#, .NET, Java, Python, etc.\n\n" +
                   "\u2705 You can Active or Disable the bot using the button below.\n\n" +
                   "\u2b50\ufe0f Here are the list of keywords you have added:\n" +
-                  "<pre>" + keywords + "</pre>", // Display the aggregated keywords list
+                  "<b>" + keywords.ToUpper() + "</b>", // Display the aggregated keywords list
             replyMarkup: inlineKeyboards, // Attach the inline keyboard
             parseMode: Telegram.Bot.Types.Enums.ParseMode.Html // Use HTML formatting in the message
         );
@@ -55,13 +54,20 @@ public class CrawlerCommand : IBotCommand
     public async Task HandleKeywordsAsync(ITelegramBotClient botClient, Message message)
     {
         // Convert input keywords to lowercase, remove spaces, and split them by comma
-        var inputKeywords = message.Text.ToLower().Replace(" ", "").Split(',');
+        var inputKeywords = message.Text
+            .ToLower()
+            .Replace(" ", "")
+            .Split(',');
 
         await using var dbContext = await _context.CreateDbContextAsync();
         // Get the list of all keywords in the database
-        var dbKeywords = await dbContext.Keywords.Select(k => k.Name).ToListAsync();
+        var dbKeywords = await dbContext.Keywords
+            .Select(k => k.Name)
+            .ToListAsync();
         // Find keywords that are not in the database
-        var notFoundKeywords = inputKeywords.Where(k => !dbKeywords.Contains(k)).ToList();
+        var notFoundKeywords = inputKeywords
+            .Where(k => !dbKeywords.Contains(k))
+            .ToList();
 
         // If there are any keywords not found in the database, inform the user
         if (notFoundKeywords.Count != 0)
@@ -77,19 +83,22 @@ public class CrawlerCommand : IBotCommand
 
         var userId = message.Chat.Id;
         // Get the user and include their keywords
-        var user = await dbContext.Users.Include(u => u.UserKeywords).ThenInclude(uk => uk.Keyword).FirstOrDefaultAsync(u => u.ClientId == userId);
-
-        if (user == null)
-        {
-            user = new User { ClientId = userId, UserKeywords = new List<UserKeyword>() };
-            dbContext.Users.Add(user);
-        }
+        var user = await dbContext.Users
+            .Include(u => u.UserKeywords)
+            .ThenInclude(uk => uk.Keyword)
+            .FirstAsync(u => u.ClientId == userId);
 
         // Get the list of keywords already associated with the user
-        var existingUserKeywords = user.UserKeywords.Select(uk => uk.Keyword.Name).ToList();
+        var existingUserKeywords = user.UserKeywords
+            .Select(uk => uk.Keyword.Name)
+            .ToList();
         // Determine which keywords to add and which to remove
-        var keywordsToAdd = inputKeywords.Where(k => !existingUserKeywords.Contains(k)).ToList();
-        var keywordsToRemove = inputKeywords.Where(k => existingUserKeywords.Contains(k)).ToList();
+        var keywordsToAdd = inputKeywords
+            .Where(k => !existingUserKeywords.Contains(k))
+            .ToList();
+        var keywordsToRemove = inputKeywords
+            .Where(k => existingUserKeywords.Contains(k))
+            .ToList();
 
         // Add new keywords to the user
         foreach (var keyword in keywordsToAdd)
@@ -102,13 +111,12 @@ public class CrawlerCommand : IBotCommand
         }
 
         // Remove existing keywords from the user
-        foreach (var keyword in keywordsToRemove)
+        foreach (var userKeyword in keywordsToRemove
+                     .Select(keyword => user.UserKeywords
+                         .FirstOrDefault(uk => uk.Keyword.Name == keyword))
+                     .OfType<UserKeyword>())
         {
-            var userKeyword = user.UserKeywords.FirstOrDefault(uk => uk.Keyword.Name == keyword);
-            if (userKeyword != null)
-            {
-                dbContext.UserKeywords.Remove(userKeyword);
-            }
+            dbContext.UserKeywords.Remove(userKeyword);
         }
 
         // Save changes to the database

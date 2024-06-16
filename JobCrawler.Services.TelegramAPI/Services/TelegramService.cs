@@ -24,40 +24,79 @@ public class TelegramService : ITelegramService
 
     public async Task SendJobPostsAsync(JobDto job)
     {
-            var message = JobBoardingTemplate.CreateJobMessage(job);
-            var inlineKeyboard = new InlineKeyboardMarkup(new[]
-            {
-                InlineKeyboardButton.WithUrl("View Job", job.Url)
-            });
+        var message = JobBoardingTemplate.CreateJobMessage(job);
+        var inlineKeyboard = new InlineKeyboardMarkup(new[]
+        {
+            InlineKeyboardButton.WithUrl("View Job", job.Url)
+        });
 
-            var success = false;
-            var retryCount = 0;
-            const int maxRetryAttempts = 5;
+        var success = false;
+        var retryCount = 0;
+        const int maxRetryAttempts = 5;
 
-            while (!success && retryCount < maxRetryAttempts)
+        while (!success && retryCount < maxRetryAttempts)
+        {
+            try
             {
-                try
-                {
-                    await _botClient.SendTextMessageAsync(
-                        chatId: _softwareDevelopmentChannelId,
-                        text: message,
-                        replyMarkup: inlineKeyboard,
-                        parseMode: ParseMode.Html,
-                        protectContent: true
-                    );
-                    success = true;
-                }
-                catch (ApiRequestException ex) when (ex.Message.Contains("Too Many Requests"))
-                {
-                    retryCount++;
-                    var retryAfter = ex.Parameters?.RetryAfter ?? 5; 
-                    await Task.Delay(retryAfter * 1000);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An error occurred: {ex.Message}");
-                    break; 
-                }
+                await _botClient.SendTextMessageAsync(
+                    chatId: _softwareDevelopmentChannelId,
+                    text: message,
+                    replyMarkup: inlineKeyboard,
+                    parseMode: ParseMode.Html,
+                    protectContent: true
+                );
+                success = true;
             }
+            catch (ApiRequestException ex) when (ex.Message.Contains("Too Many Requests"))
+            {
+                retryCount++;
+                var retryAfter = ex.Parameters?.RetryAfter ?? 5;
+                await Task.Delay(retryAfter * 1000);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                break;
+            }
+        }
+    }
+
+    public async Task SendJobPostsAsync(JobDto job, long clientId)
+    {
+        var message = JobBoardingTemplate.CreateJobMessage(job);
+        var inlineKeyboard = new InlineKeyboardMarkup(new[]
+        {
+            InlineKeyboardButton.WithUrl("View Job", job.Url)
+        });
+
+        var success = false;
+        var retryCount = 0;
+        const int maxRetryAttempts = 5;
+
+        while (!success && retryCount < maxRetryAttempts)
+        {
+            try
+            {
+                await _botClient.SendTextMessageAsync(
+                    chatId: clientId,
+                    text: message,
+                    replyMarkup: inlineKeyboard,
+                    parseMode: ParseMode.Html,
+                    protectContent: true
+                );
+                success = true;
+            }
+            catch (ApiRequestException ex) when (ex.Message.Contains("Too Many Requests"))
+            {
+                retryCount++;
+                var retryAfter = ex.Parameters?.RetryAfter ?? 5;
+                await Task.Delay(retryAfter * 1000);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+                break;
+            }
+        }
     }
 }
