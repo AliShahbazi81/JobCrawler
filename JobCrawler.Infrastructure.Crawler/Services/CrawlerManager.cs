@@ -55,6 +55,13 @@ namespace JobCrawler.Infrastructure.Crawler.Services
                 var seconds = TimeExtractor.GetSeconds(job.PostedDate!);
                 return seconds is null or > SharedVariables.TimeIntervalSeconds;
             });
+            
+            // Send job posts to the channel
+            foreach (var job in jobs)
+            {
+                await telegramService.SendJobPostsAsync(job);
+                await Task.Delay(1000); // Delay to avoid hitting rate limits
+            }
 
             // Replace .NET with DotNet and C# with CSharp in the job title and description
             jobs.ForEach(job =>
@@ -66,13 +73,6 @@ namespace JobCrawler.Infrastructure.Crawler.Services
                         .Replace("C#", "CSharp");
                 }
             });
-
-            // Send job posts to the channel
-            foreach (var job in jobs)
-            {
-                await telegramService.SendJobPostsAsync(job);
-                await Task.Delay(1000); // Delay to avoid hitting rate limits
-            }
 
             // Retrieve active users and their keywords
             var activeUsers = await dbContext.Users
