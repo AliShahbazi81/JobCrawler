@@ -59,7 +59,7 @@ public class StartCommand : IBotCommand
         user = new User
         {
             ClientId = userId,
-            Username = username,
+            Username = username ?? "Unknown",
             JoinedAt = DateTime.Now.ToUniversalTime()
         };
         
