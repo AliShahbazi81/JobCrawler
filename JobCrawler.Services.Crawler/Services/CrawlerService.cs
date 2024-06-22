@@ -22,6 +22,9 @@ public class CrawlerService : ICrawlerService
 
         // Database
         "SQL", "NoSQL", "MongoDB", "PostgreSQL", "MySQL", "SQLite", "Redis", "RabbitMQ", "Kafka", "Elasticsearch",
+        
+        // Data Science, Machine Learning, Data Analysis
+        "Pandas", "NumPy", "SciPy", "scikit-learn", "TensorFlow", "Keras", "PyTorch", "Matplotlib", "Seaborn", "Jupyter", "R", "RStudio", "SPSS", "SAS", "Stata", "Excel", "Tableau", "Power BI", "Hadoop", "Spark", "Hive", "Pig", "HBase", "Mahout", "MLlib", "Data Mining", "Data Wrangling", "Data Visualization", "Predictive Analytics", "Statistical Analysis", "Deep Learning", "Neural Networks", "Natural Language Processing", "Computer Vision", "Big Data", "Time Series Analysis", "Bayesian Inference", "A/B Testing", "Feature Engineering", "Model Deployment", "AutoML", "Data Cleaning", "ETL", "Dimensionality Reduction", "Clustering", "Classification", "Regression", "Machine Learning Algorithms", "Data Preprocessing", "Data Collection", "Data Warehousing",
 
         // Tools and Technologies
         "AWS", "Azure", "Docker", "Kubernetes", "Jenkins", "Git", "GitHub", "GitLab", "Bitbucket", "Jira", "Confluence", "Slack", "Trello", "Azure DevOps", "AWS CodePipeline", "AWS CodeBuild", "AWS CodeDeploy", "AWS CodeCommit", "AWS CodeStar", "AWS CodeArtifact", "AWS CodeGuru", "Ubuntu", "Debian", "CentOS", "RedHat", "Fedora", "Windows", "MacOS", "Linux", "Unix", "Shell Scripting", "PowerShell", "Bash", "Zsh", "Terraform", "Ansible", "Chef", "Puppet", "SaltStack", "Nginx", "Apache", "IIS", "Logstash", "Kibana", "Prometheus", "Grafana", "Splunk", "Datadog", "New Relic", "Sentry", "AppDynamics", "Dynatrace", "Postman", "Swagger", "OpenAPI", "GraphQL", "gRPC", "SOAP", "WebSockets", "WebRTC", "OAuth", "JWT", "SAML", "OpenID", "LDAP", "Active Directory",
