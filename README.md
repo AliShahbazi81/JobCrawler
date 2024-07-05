@@ -43,7 +43,7 @@ cd JobCrawler</code></pre>
         <li>Monitor the console output for logs indicating successful job scraping and Telegram message dispatches.</li>
     </ol>
     <h2>Configuration</h2>
-    <p>Create an <code>appsettings.json</code> file in the project's root directory with the following structure to configure your Telegram bot settings:</p>
+    <p>Create an <code>appsettings.json</code> file in the <code>/JobCrawler/</code> directory alongside the file <code>JobCrawler.csproj</code> with the following structure to configure your Telegram bot settings:</p>
     <pre><code>{
   "Telegram": {
     "ApiToken": "YOUR_TELEGRAM_BOT_TOKEN",
