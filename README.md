@@ -45,8 +45,8 @@ cd JobCrawler</code></pre>
     <h2>Configuration</h2>
     <p>Create an <code>appsettings.json</code> file in the project's root directory with the following structure to configure your Telegram bot settings:</p>
     <pre><code>{
-  "TelegramConfigs": {
-    "BotToken": "YOUR_TELEGRAM_BOT_TOKEN",
+  "Telegram": {
+    "ApiToken": "YOUR_TELEGRAM_BOT_TOKEN",
     "ChannelId": "YOUR_TELEGRAM_CHANNEL_ID"
   }
 }</code></pre>
