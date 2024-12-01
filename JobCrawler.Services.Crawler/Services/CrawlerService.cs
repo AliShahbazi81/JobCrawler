@@ -60,102 +60,148 @@ public class CrawlerService : ICrawlerService
         var delay = 3000;
         var jobs = new List<JobDto>();
 
-        var baseUrl = $"https://www.linkedin.com/jobs/search/?f_TPR=r{SharedVariables.TimeIntervalSeconds}&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET OR VueJs OR Angular OR NodeJs OR SQL OR NoSQL OR ExpressJs OR Laravel OR PHP OR Swift OR Android OR Ruby OR Ruby on Rails OR AutoCAD OR Civil 3D OR Civil3D OR Revit OR ETABS OR Microsoft Project OR MSP OR Primavera P6 OR P6 OR BIM OR Building Information Modeling OR Navisworks OR MS Word OR MS Excel OR Excel OR Word OR Powerpoint)&location={Uri.EscapeDataString(location)}";
+        var url = $"https://www.linkedin.com/jobs/search/?f_TPR=r{SharedVariables.TimeIntervalSeconds}&keywords=(.NET OR Java OR HTML OR C%23 OR AWS OR Azure OR Python OR Django OR Flask OR FastAPI OR C++ OR C OR Perl OR GoLang OR CSS OR JavaScript OR React OR NextJs OR ASP.NET OR VueJs OR Angular OR NodeJs OR SQL OR NoSQL OR ExpressJs OR Laravel OR PHP OR Swift OR Android OR Ruby OR Ruby on Rails OR AutoCAD OR Civil 3D OR Civil3D OR Revit OR ETABS OR Microsoft Project OR MSP OR Primavera P6 OR P6 OR BIM OR Building Information Modeling OR Navisworks OR MS Word OR MS Excel OR Excel OR Word OR Powerpoint)&location={Uri.EscapeDataString(location)}";
 
-        var maxRetries = 5; // Maximum retry attempts
-        var backoffFactor = 2; // Exponential backoff factor
+        var policy = Policy.Handle<HttpRequestException>().RetryAsync(2);
 
-        for (var attempt = 1; attempt <= maxRetries; attempt++)
+        await policy.ExecuteAsync(async () =>
         {
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("User-Agent", SharedVariables.UserAgent);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var pageContents = await response.Content.ReadAsStringAsync();
+            var htmlDocument = new HtmlDocument();
+            htmlDocument.LoadHtml(pageContents);
+
+            var jobCards = htmlDocument.DocumentNode.SelectNodes(SharedVariables.JobCards);
+
+            if (jobCards == null)
+                return;
+
+            await new BrowserFetcher().DownloadAsync(Chrome.DefaultBuildId);
+            var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            {
+                Headless = true,
+                Timeout = 60000
+            });
+
             try
             {
-                // Regenerate the URL (if dynamic adjustments are needed, you can include them here)
-                var refreshedUrl = baseUrl;
-
-                // Regenerate the request for each attempt
-                using var request = new HttpRequestMessage(HttpMethod.Get, refreshedUrl);
-                request.Headers.Add("User-Agent", SharedVariables.UserAgent);
-                request.Headers.Add("Cache-Control", "no-cache"); // Force fresh fetch
-
-                var response = await _httpClient.SendAsync(request);
-
-                if ((int)response.StatusCode == 429)
+                foreach (var card in jobCards)
                 {
-                    Console.WriteLine($"Attempt {attempt}: Received 429 Too Many Requests. Retrying after delay...");
-                    var retryAfter = response.Headers.RetryAfter?.Delta?.TotalSeconds ?? Math.Pow(backoffFactor, attempt);
-                    await Task.Delay(TimeSpan.FromSeconds(retryAfter));
-                    continue; // Retry the request
-                }
+                    var jobTitleNode = card.SelectSingleNode(SharedVariables.JobTitleNode);
+                    var companyNode = card.SelectSingleNode(SharedVariables.CompanyNode);
+                    var locationNode = card.SelectSingleNode(SharedVariables.LocationNode);
+                    var jobUrlNode = card.SelectSingleNode(SharedVariables.JobUrlNode);
+                    var postedDateNode = card.SelectSingleNode(SharedVariables.PostedDateNode);
 
-                response.EnsureSuccessStatusCode(); // Throw if not a success status code
+                    var jobTitle = jobTitleNode?.InnerText.Trim() ?? "N/A";
+                    var companyName = companyNode?.InnerText.Trim() ?? "N/A";
+                    var jobLocation = locationNode?.InnerText.Trim() ?? "N/A";
+                    var jobUrl = jobUrlNode?.Attributes["href"]?.Value ?? "N/A";
+                    var postedDate = postedDateNode?.InnerText.Trim() ?? "N/A";
 
-                var pageContents = await response.Content.ReadAsStringAsync();
-                var htmlDocument = new HtmlDocument();
-                htmlDocument.LoadHtml(pageContents);
-
-                var jobCards = htmlDocument.DocumentNode.SelectNodes(SharedVariables.JobCards);
-
-                if (jobCards == null)
-                    return jobs;
-
-                await new BrowserFetcher().DownloadAsync(Chrome.DefaultBuildId);
-                var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-                {
-                    Headless = true,
-                    Timeout = 60000
-                });
-
-                try
-                {
-                    foreach (var card in jobCards)
+                    var job = new JobDto
                     {
-                        var jobTitleNode = card.SelectSingleNode(SharedVariables.JobTitleNode);
-                        var companyNode = card.SelectSingleNode(SharedVariables.CompanyNode);
-                        var locationNode = card.SelectSingleNode(SharedVariables.LocationNode);
-                        var jobUrlNode = card.SelectSingleNode(SharedVariables.JobUrlNode);
-                        var postedDateNode = card.SelectSingleNode(SharedVariables.PostedDateNode);
+                        Title = jobTitle,
+                        Company = companyName,
+                        Location = jobLocation,
+                        Url = jobUrl,
+                        PostedDate = postedDate
+                    };
 
-                        var jobTitle = jobTitleNode?.InnerText.Trim() ?? "N/A";
-                        var companyName = companyNode?.InnerText.Trim() ?? "N/A";
-                        var jobLocation = locationNode?.InnerText.Trim() ?? "N/A";
-                        var jobUrl = jobUrlNode?.Attributes["href"]?.Value ?? "N/A";
-                        var postedDate = postedDateNode?.InnerText.Trim() ?? "N/A";
+                    // Fetch additional details from job details page
+                    using var jobDetailsRequest = new HttpRequestMessage(HttpMethod.Get, job.Url);
+                    jobDetailsRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
 
-                        var job = new JobDto
+                    var jobDetailsResponse = await _httpClient.SendAsync(jobDetailsRequest);
+                    var jobDetailsPageContents = await jobDetailsResponse.Content.ReadAsStringAsync();
+
+                    var jobDetailsDocument = new HtmlDocument();
+                    jobDetailsDocument.LoadHtml(jobDetailsPageContents);
+
+                    // Extract employment type
+                    var employmentTypeNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.EmploymentTypeNode);
+                    job.EmploymentType = employmentTypeNode?.InnerText.Trim() ?? "N/A";
+
+                    // Extract number of employees
+                    var numberOfEmployeesNode = jobDetailsDocument.DocumentNode.SelectSingleNode(SharedVariables.NumberOfEmployeesNode);
+                    job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "0 Applicants";
+
+                    // Extract job description
+                    var jobDescriptionFound = false;
+                    var attempts = 0;
+
+                    while (attempts < 5 && !jobDescriptionFound)
+                    {
+                        try
                         {
-                            Title = jobTitle,
-                            Company = companyName,
-                            Location = jobLocation,
-                            Url = jobUrl,
-                            PostedDate = postedDate
-                        };
+                            await using var page = await browser.NewPageAsync();
+                            await page.GoToAsync(job.Url, new NavigationOptions
+                            {
+                                WaitUntil = [WaitUntilNavigation.Networkidle0]
+                            });
 
-                        // Fetch additional details for each job here (as in your original code)...
-                        jobs.Add(job);
+                            // Validate the page object
+                            if (page == null)
+                            {
+                                Console.WriteLine("Page object is null.");
+                                throw new Exception("Page object is null.");
+                            }
+
+                            // Increase timeout to 60 seconds
+                            await page.WaitForSelectorAsync(SharedVariables.JobDescriptionNode, new WaitForSelectorOptions { Timeout = delay, Visible = true });
+
+                            var jobDescription = await page.EvaluateExpressionAsync<string>(@"
+                            document.querySelector('.description__text--rich').innerText
+                        ");
+
+                            // Convert job description to lowercase
+                            jobDescription = jobDescription.ToLower();
+
+                            // Check for location type keywords
+                            if (jobDescription.Contains("remote"))
+                                job.LocationType = "Remote";
+                            else if (jobDescription.Contains("hybrid"))
+                                job.LocationType = "Hybrid";
+                            else
+                                job.LocationType = "On-Site";
+
+                            // List to store found keywords
+                            var foundKeywords = _softwareKeywords
+                                .Where(keyword => jobDescription.Contains(keyword.ToLower()))
+                                .ToList();
+
+                            // Set job description to found keywords or N/A if none found
+                            job.JobDescription = foundKeywords.Count > 0 ? string.Join(", ", foundKeywords) : "N/A";
+                            jobDescriptionFound = true;
+                        }
+                        catch (Exception ex)
+                        {
+                            attempts++;
+                            if (delay < 10_000)
+                                delay += 2000;
+                            Console.WriteLine($"Attempt {attempts}: Failed to get job description for URL: {job.Url}");
+                            Console.WriteLine(ex.Message);
+                            if (attempts >= 5)
+                            {
+                                job.JobDescription = "N/A";
+                            }
+                        }
                     }
-                }
-                finally
-                {
-                    await browser.CloseAsync();
-                }
 
-                return jobs; // If we successfully complete, return the jobs
+                    jobs.Add(job);
+                }
             }
-            catch (Exception ex)
+            finally
             {
-                Console.WriteLine($"Attempt {attempt}: Failed with error: {ex.Message}");
-                if (attempt == maxRetries)
-                {
-                    Console.WriteLine("Max retry attempts reached. Aborting.");
-                    break; // Exit the loop after max retries
-                }
-
-                var retryDelay = Math.Pow(backoffFactor, attempt); // Exponential backoff
-                Console.WriteLine($"Retrying in {retryDelay} seconds...");
-                await Task.Delay(TimeSpan.FromSeconds(retryDelay));
+                await browser.CloseAsync();
             }
-        }
+        });
 
-        return jobs; // Return whatever jobs were processed, or an empty list if no success
+        return jobs;
     }
 }
