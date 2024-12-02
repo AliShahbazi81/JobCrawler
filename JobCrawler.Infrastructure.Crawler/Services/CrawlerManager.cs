@@ -84,22 +84,22 @@ namespace JobCrawler.Infrastructure.Crawler.Services
             }
             
             // Replace .NET with DotNet and C# with CSharp in the job title and description
-            jobs.ForEach(job =>
-            {
-                if (job.JobDescription != null)
-                {
-                    job.JobDescription = job.JobDescription
-                        .Replace(".NET", "DotNet")
-                        .Replace("C#", "CSharp");
-                }
-            });
+            // jobs.ForEach(job =>
+            // {
+            //     if (job.JobDescription != null)
+            //     {
+            //         job.JobDescription = job.JobDescription
+            //             .Replace(".NET", "DotNet")
+            //             .Replace("C#", "CSharp");
+            //     }
+            // });
             
             // Send job posts to the channel
-            foreach (var job in jobs)
-            {
-                await telegramService.SendJobPostsAsync(job);
-                await Task.Delay(1000); // Delay to avoid hitting rate limits
-            }
+            // foreach (var job in jobs)
+            // {
+            //     await telegramService.SendJobPostsAsync(job);
+            //     await Task.Delay(1000); // Delay to avoid hitting rate limits
+            // }
 
             return Result<bool>.Success(true);
         }

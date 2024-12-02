@@ -25,7 +25,6 @@ public class CommandHandlerService
             new ContactUsCommand(),
             new ChannelsCommand(),
             new GroupCommand(),
-            new DonationCommand(),
             new CrawlerCommand(context)
         };
     }
