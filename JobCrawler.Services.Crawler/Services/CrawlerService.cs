@@ -27,7 +27,7 @@ public class CrawlerService : ICrawlerService
     public async Task<List<JobDto>> GetJobsAsync()
     {
         var allJobs = new List<JobDto>();
-        var semaphore = new SemaphoreSlim(2); // Limit concurrency to 3 tasks
+        var semaphore = new SemaphoreSlim(1);
         var tasks = new List<Task>();
 
         foreach (var location in _locations)
@@ -56,6 +56,8 @@ public class CrawlerService : ICrawlerService
                 }
                 finally
                 {
+                    // Introduce a delay before releasing the semaphore to space out tasks
+                    await Task.Delay(TimeSpan.FromSeconds(3));
                     semaphore.Release();
                 }
             }));
@@ -70,7 +72,7 @@ public class CrawlerService : ICrawlerService
     {
         var jobs = new List<JobDto>();
 
-        var url = $"https://www.linkedin.com/jobs/search/?f_TPR=r{SharedVariables.TimeIntervalSeconds}&keywords=(Civil Engineer OR Civil OR Civil engineering)&location={Uri.EscapeDataString(location)}";
+        var url = $"https://www.linkedin.com/jobs/search/?f_TPR=r{SharedVariables.TimeIntervalSeconds}&keywords=(Civil Engineer OR Civil OR Civil engineering OR Junior civil engineer OR Project coordinator OR Field engineer OR Civil engineer OR Estimation engineer)&location={Uri.EscapeDataString(location)}";
 
         try
         {
