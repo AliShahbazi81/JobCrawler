@@ -1,7 +1,10 @@
+using System.Net;
 using HtmlAgilityPack;
 using JobCrawler.Domain.Variables;
 using JobCrawler.Services.Crawler.DTO;
 using JobCrawler.Services.Crawler.Services.Interfaces;
+using Polly.Retry;
+using Polly;
 
 namespace JobCrawler.Services.Crawler.Services;
 
@@ -19,21 +22,64 @@ public class CrawlerService : ICrawlerService
 
     private readonly List<string> _locations = new() { "Canada" };
 
+    // Global delay to respect Retry-After headers
+    private static TimeSpan _globalDelay = TimeSpan.Zero;
+
+    // Retry policy for handling 429 errors
+    private readonly AsyncRetryPolicy<HttpResponseMessage> _retryPolicy;
+
+    // Semaphore to control concurrency
+    private readonly SemaphoreSlim _semaphore;
+
+    // Rate limiter to control the rate of requests
+    private readonly RateLimiter _rateLimiter;
+
     public CrawlerService(HttpClient httpClient)
     {
         _httpClient = httpClient;
+
+        // Initialize the retry policy
+        _retryPolicy = Policy
+            .HandleResult<HttpResponseMessage>(r => r.StatusCode == (HttpStatusCode)429)
+            .WaitAndRetryAsync(
+                retryCount: 3,
+                sleepDurationProvider: (retryAttempt, response, context) =>
+                {
+                    if (response.Result.Headers.TryGetValues("Retry-After", out var values))
+                    {
+                        if (int.TryParse(values.First(), out int seconds))
+                        {
+                            _globalDelay = TimeSpan.FromSeconds(seconds);
+                            return _globalDelay;
+                        }
+                    }
+
+                    _globalDelay = TimeSpan.FromSeconds(10); // Default delay
+                    return _globalDelay;
+                },
+                onRetryAsync: async (response, timespan, retryAttempt, context) =>
+                {
+                    Console.WriteLine($"Received 429. Applying global delay of {timespan}. Retry attempt {retryAttempt}.");
+                    await Task.CompletedTask;
+                }
+            );
+
+        // Initialize the semaphore for concurrency control (set to 1 for sequential processing)
+        _semaphore = new SemaphoreSlim(1);
+
+        // Initialize the rate limiter with a delay between requests
+        _rateLimiter = new RateLimiter(TimeSpan.FromSeconds(2));
     }
 
     public async Task<List<JobDto>> GetJobsAsync()
     {
         var allJobs = new List<JobDto>();
-        var semaphore = new SemaphoreSlim(1);
         var tasks = new List<Task>();
 
         foreach (var location in _locations)
         {
             // Wait for an available slot
-            await semaphore.WaitAsync();
+            await _semaphore.WaitAsync();
 
             tasks.Add(Task.Run(async () =>
             {
@@ -57,8 +103,8 @@ public class CrawlerService : ICrawlerService
                 finally
                 {
                     // Introduce a delay before releasing the semaphore to space out tasks
-                    await Task.Delay(TimeSpan.FromSeconds(3));
-                    semaphore.Release();
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                    _semaphore.Release();
                 }
             }));
         }
@@ -76,12 +122,31 @@ public class CrawlerService : ICrawlerService
 
         try
         {
-            // Fetch the job listings page
-            using var initialRequest = new HttpRequestMessage(HttpMethod.Get, url);
-            initialRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
+            // Apply global delay if set
+            if (_globalDelay > TimeSpan.Zero)
+            {
+                Console.WriteLine($"Waiting for {_globalDelay.TotalSeconds} seconds due to previous 429 response.");
+                await Task.Delay(_globalDelay);
+                _globalDelay = TimeSpan.Zero; // Reset after waiting
+            }
 
-            var initialResponse = await _httpClient.SendAsync(initialRequest);
-            initialResponse.EnsureSuccessStatusCode();
+            // Fetch the job listings page with retry policy
+            var initialResponse = await _retryPolicy.ExecuteAsync(async () =>
+            {
+                // Use the rate limiter to control the request rate
+                return await _rateLimiter.PerformAsync(async () =>
+                {
+                    using var initialRequest = new HttpRequestMessage(HttpMethod.Get, url);
+                    initialRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
+                    return await _httpClient.SendAsync(initialRequest);
+                });
+            });
+
+            if (!initialResponse.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"Failed to fetch job listings for {location} after retries.");
+                return jobs; // Skip this location after retries
+            }
 
             var pageContents = await initialResponse.Content.ReadAsStringAsync();
             var htmlDocument = new HtmlDocument();
@@ -104,9 +169,13 @@ public class CrawlerService : ICrawlerService
                 {
                     jobs.Add(job);
                 }
+                else
+                {
+                    Console.WriteLine("Job processing returned null. Continuing to next job.");
+                }
 
                 // Introduce a delay to avoid sending requests too quickly
-                await Task.Delay(2000); // Adjust this delay as needed
+                await Task.Delay(TimeSpan.FromSeconds(2)); // Adjust this delay as needed
             }
         }
         catch (Exception ex)
@@ -148,19 +217,30 @@ public class CrawlerService : ICrawlerService
             {
                 Console.WriteLine($"Fetching details for job: {job.Title} at {job.Company}");
 
-                using var jobDetailsRequest = new HttpRequestMessage(HttpMethod.Get, job.Url);
-                jobDetailsRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
-
-                var jobDetailsResponse = await _httpClient.SendAsync(jobDetailsRequest);
-
-                if ((int)jobDetailsResponse.StatusCode == 429)
+                // Apply global delay if set
+                if (_globalDelay > TimeSpan.Zero)
                 {
-                    Console.WriteLine("429 Too Many Requests encountered. Retrying after delay...");
-                    await Task.Delay(5000); // Wait before retrying
-                    return null; // Skip this job if still rate-limited
+                    Console.WriteLine($"Waiting for {_globalDelay.TotalSeconds} seconds due to previous 429 response.");
+                    await Task.Delay(_globalDelay);
+                    _globalDelay = TimeSpan.Zero; // Reset after waiting
                 }
 
-                jobDetailsResponse.EnsureSuccessStatusCode();
+                var jobDetailsResponse = await _retryPolicy.ExecuteAsync(async () =>
+                {
+                    // Use the rate limiter to control the request rate
+                    return await _rateLimiter.PerformAsync(async () =>
+                    {
+                        using var jobDetailsRequest = new HttpRequestMessage(HttpMethod.Get, job.Url);
+                        jobDetailsRequest.Headers.Add("User-Agent", SharedVariables.UserAgent);
+                        return await _httpClient.SendAsync(jobDetailsRequest);
+                    });
+                });
+
+                if (!jobDetailsResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"Failed to fetch job details for {job.Title} after retries.");
+                    return null; // Skip this job after retries
+                }
 
                 var jobDetailsPageContents = await jobDetailsResponse.Content.ReadAsStringAsync();
                 var jobDetailsDocument = new HtmlDocument();
@@ -175,7 +255,7 @@ public class CrawlerService : ICrawlerService
                 job.NumberOfEmployees = numberOfEmployeesNode?.InnerText.Trim() ?? "0 Applicants";
             }
 
-            // Optionally process job description here (e.g., using Puppeteer)
+            // Optionally process job description here
 
             return job;
         }
